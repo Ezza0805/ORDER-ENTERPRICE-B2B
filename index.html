@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kelola Order Enterprise B2B - Segmen DPS &amp; DSS</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen flex overflow-hidden">
+    <!-- <button id="sidebarToggle" class="sidebar-toggle" aria-label="Open sidebar">
+        <i class="fa-solid fa-bars"></i>
+    </button> -->
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-slate-300 border-r border-slate-800 hidden md:flex flex-col shrink-0">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950">
+            <i class="fas fa-network-wired text-indigo-400 text-2xl mr-3"></i>
+            <div>
+                <span class="text-lg font-bold text-white tracking-wide">OrderPro B2B</span>
+                <span class="block text-[10px] text-indigo-400 font-medium tracking-wider uppercase">Enterprise Edition</span>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            <a href="file:///D:/DATA/Downloads/aplikasi_kelola_order_ai%20(5).html#" class="flex items-center px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium transition-colors shadow-sm">
+                <i class="fas fa-layer-group w-5 mr-3 text-indigo-200"></i> Kelola Order
+            </a>
+            <a href="file:///D:/DATA/Downloads/aplikasi_kelola_order_ai%20(5).html#" onclick="openAIModal()" class="flex items-center px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition-colors">
+                <i class="fas fa-brain w-5 mr-3 text-indigo-400"></i> Analytics &amp; AI
+            </a>
+            <a href="#" onclick="exportToExcel(event)" class="flex items-center px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg font-medium transition-colors">
+                <i class="fas fa-file-excel w-5 mr-3 text-emerald-400"></i> Ekspor excel
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-800 bg-slate-950">
+            <div class="flex items-center">
+                <div class="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold mr-3 shadow">
+                    EP
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-semibold text-white truncate">Enterprise Admin</p>
+                    <p class="text-xs text-slate-400 truncate">admin@b2b-telco.id</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
+            <div class="flex items-center">
+                <button class="md:hidden text-slate-600 hover:text-slate-900 mr-4">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h1 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-tasks text-indigo-600"></i>
+                    Manajemen Order Pelanggan Enterprise
+                </h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <!-- Status Sinkronisasi Cloud -->
+                <div id="cloudStatus" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-semibold">
+                    <i class="fas fa-cloud-upload-alt text-emerald-500 animate-pulse"></i>
+                    <span id="cloudStatusText">Lokal Mode</span>
+                </div>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="searchInput" placeholder="Cari Pelanggan, LOP, CC Nipnas, SID, DPS/DSS..." class="pl-9 pr-4 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-sm focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all w-64 focus:w-80">
+                </div>
+                <button onclick="getAIInsights()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center shadow-sm">
+                    <i class="fas fa-robot mr-2 text-indigo-200"></i> AI Insights
+                </button>
+                <button onclick="exportToExcel(event)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center shadow-sm" title="Download Excel/CSV">
+                    <i class="fas fa-download mr-1.5"></i> Ekspor
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Scrollable Area -->
+        <div class="flex-1 overflow-y-auto p-6 bg-slate-100 relative">
+            
+            <!-- Dashboard Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold uppercase text-slate-400">Total Order</span>
+                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-sm">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800" id="statTotalOrders">1</h3>
+                    <p class="text-[11px] text-slate-500 mt-1">Order terdaftar</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold uppercase text-slate-400">Total Proyek</span>
+                        <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center text-sm">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 truncate" id="statTotalRevenue">Rp 15.000.000</h3>
+                    <p class="text-[11px] text-slate-500 mt-1">Seluruh Segmen</p>
+                </div>
+
+                <!-- Card Total DPS -->
+                <div class="bg-gradient-to-br from-indigo-50 to-white p-4 rounded-xl border border-indigo-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase text-indigo-600">Total Proyek DPS</span>
+                        <div class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center text-sm shadow">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-bold text-indigo-900 truncate" id="statTotalDPS">Rp 0</h3>
+                    <p class="text-[11px] text-indigo-600/80 mt-1 font-medium" id="statCountDPS">0 Order DPS</p>
+                </div>
+
+                <!-- Card Total DSS -->
+                <div class="bg-gradient-to-br from-cyan-50 to-white p-4 rounded-xl border border-cyan-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase text-cyan-700">Total Proyek DSS</span>
+                        <div class="w-8 h-8 bg-cyan-600 text-white rounded-lg flex items-center justify-center text-sm shadow">
+                            <i class="fas fa-cloud-download-alt"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-bold text-cyan-900 truncate" id="statTotalDSS">Rp 15.000.000</h3>
+                    <p class="text-[11px] text-cyan-700/80 mt-1 font-medium" id="statCountDSS">1 Order DSS</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold uppercase text-slate-400">Bulanan (MRC)</span>
+                        <div class="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center text-sm">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 truncate" id="statTotalBulanan">Rp 2.500.000</h3>
+                    <p class="text-[11px] text-slate-500 mt-1">Monthly Recurring</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold uppercase text-slate-400">Status Billcom</span>
+                        <div class="w-8 h-8 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center text-sm">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline space-x-2">
+                        <h3 class="text-lg font-bold text-emerald-600" id="statBillcomSelesai">1 / 1</h3>
+                        <span class="text-xs text-slate-400">Sudah Billcom</span>
+                    </div>
+                    <p class="text-[11px] text-amber-600 mt-1 font-medium" id="statProvcomPendingInfo">0 Belum Provcom</p>
+                </div>
+            </div>
+
+            <!-- Order List Container -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div class="p-5 border-b border-slate-200 bg-white flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Daftar Order Enterprise (DPS &amp; DSS)</h2>
+                        <p class="text-xs text-slate-500">Memilah dan mengelola data order berdasarkan Segmen DPS, DSS, serta identitas CC Nipnas dan status operasional.</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Filter Segmen (DPS / DSS / Connectivity) -->
+                        <select id="filterSegmen" onchange="applyFilters()" class="px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-bold text-indigo-800 outline-none focus:ring-2 focus:ring-indigo-200">
+                            <option value="">Semua Segmen (DPS &amp; DSS)</option>
+                            <option value="DPS">DPS</option>
+                            <option value="DSS">DSS</option>
+                            <option value="Connectivity">Connectivity</option>
+                        </select>
+
+                        <!-- Filter Category -->
+                        <select id="filterKategori" onchange="applyFilters()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-200">
+                            <option value="">Semua Kategori Order</option>
+                            <option value="Renewal">Renewal</option>
+                            <option value="PSB">PSB</option>
+                            <option value="Modify Price">Modify Price</option>
+                            <option value="Modify BW">Modify BW</option>
+                            <option value="Resume Order">Resume Order</option>
+                            <option value="Disconect">Disconect</option>
+                            <option value="Downgread">Downgread</option>
+                            <option value="Input Ulang">Input Ulang</option>
+                        </select>
+
+                        <!-- Filter Status -->
+                        <select id="filterStatus" onchange="applyFilters()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-200">
+                            <option value="">Semua Status</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Pending Baso">Pending Baso</option>
+                            <option value="Inprogress">Inprogress</option>
+                        </select>
+
+                        <button onclick="openModal(&#39;add&#39;)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center shadow-sm">
+                            <i class="fas fa-plus mr-1.5"></i> Tambah Order Baru
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Container with Horizontal Scroll -->
+                <div class="overflow-x-auto relative max-h-[600px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="sticky top-0 bg-slate-900 text-slate-200 uppercase text-[11px] tracking-wider z-20">
+                            <tr>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[130px]">ID LOP</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[180px]">Nama Pelanggan</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[130px]">CC Nipnas</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[90px] bg-slate-800 text-indigo-300">Segmen</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[120px]">Kategori</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[160px]">Produk</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[100px]">BW</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[80px]">Durasi</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[120px]">Quote</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[120px]">Order</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[120px]">SID</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[130px]">Billing Account</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap text-right min-w-[120px]">OTC (Rp)</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap text-right min-w-[130px]">Bulanan (Rp)</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap text-right min-w-[140px] text-indigo-300">Total Proyek</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[110px]">Tgl Provcom</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[110px]">Tgl Billcom</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[110px]">Status</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[140px]">No. Kontrak</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[120px]">Review Kontrak</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[100px]">Start Date</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[100px]">End Date</th>
+                                <th class="px-4 py-3.5 font-semibold whitespace-nowrap min-w-[160px]">Keterangan</th>
+                                <th class="px-4 py-3.5 font-semibold text-center whitespace-nowrap sticky-col min-w-[120px]">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody" class="divide-y divide-slate-200 bg-white"><tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                        <td class="px-4 py-3 font-semibold text-indigo-700 whitespace-nowrap">123</td>
+                        <td class="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap max-w-[200px] truncate" title="POLTEKKES">POLTEKKES</td>
+                        <td class="px-4 py-3 text-slate-600 font-mono whitespace-nowrap">POLTEKKES</td>
+                        <td class="px-4 py-3 whitespace-nowrap"><span class="px-2.5 py-1 rounded text-[10px] uppercase border bg-cyan-100 text-cyan-800 border-cyan-300 font-bold">DSS</span></td>
+                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200">Modify BW</span></td>
+                        <td class="px-4 py-3 text-slate-700 font-medium whitespace-nowrap max-w-[180px] truncate" title="ASTINET">ASTINET</td>
+                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap">1000</td>
+                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap">6 Bln</td>
+                        <td class="px-4 py-3 text-slate-500 whitespace-nowrap">1-00098</td>
+                        <td class="px-4 py-3 text-slate-500 whitespace-nowrap">1-00098</td>
+                        <td class="px-4 py-3 text-slate-600 font-mono whitespace-nowrap">45671189</td>
+                        <td class="px-4 py-3 text-slate-600 font-mono whitespace-nowrap">89776</td>
+                        <td class="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap">Rp 0</td>
+                        <td class="px-4 py-3 text-right font-medium text-slate-700 whitespace-nowrap">Rp 2.500.000</td>
+                        <td class="px-4 py-3 text-right font-bold text-indigo-700 whitespace-nowrap">Rp 15.000.000</td>
+                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap">01 Jan 2026</td>
+                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap">01 Jan 2026</td>
+                        <td class="px-4 py-3 whitespace-nowrap"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-emerald-100 text-emerald-800 border-emerald-200">Completed</span></td>
+                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap">6666111</td>
+                        <td class="px-4 py-3 whitespace-nowrap"><a href="https://drive.google.com/drive/folders/1aKpgQ1v15WADtZZoX3IZsnq3sYtJtReq" target="_blank" class="text-indigo-600 hover:underline font-medium flex items-center gap-1"><i class="fas fa-external-link-alt text-[10px]"></i> Link Kontrak</a></td>
+                        <td class="px-4 py-3 text-slate-500 whitespace-nowrap">01 Jan 2026</td>
+                        <td class="px-4 py-3 text-slate-500 whitespace-nowrap">31 Okt 2026</td>
+                        <td class="px-4 py-3 text-slate-600 whitespace-nowrap max-w-[180px] truncate" title="-">-</td>
+                        <td class="px-4 py-3 text-center whitespace-nowrap sticky-col">
+                            <div class="flex items-center justify-center space-x-1">
+                                <button onclick="viewDetail(&#39;ORD-5771&#39;)" class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Lihat Detail">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                                <button onclick="openModal(&#39;edit&#39;, &#39;ORD-5771&#39;)" class="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors" title="Edit Order">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </button>
+                                <button onclick="confirmDelete(&#39;ORD-5771&#39;)" class="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Hapus Order">
+                                    <i class="fas fa-trash-alt text-sm"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr></tbody>
+                    </table>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="flex-col items-center justify-center py-16 px-4 text-center hidden">
+                    <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mb-3">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3 class="text-slate-800 font-bold text-base mb-1">Tidak ada data order ditemukan</h3>
+                    <p class="text-slate-500 text-xs mb-4">Coba sesuaikan kata kunci pencarian atau filter DPS/DSS Anda.</p>
+                    <button onclick="openModal(&#39;add&#39;)" class="text-indigo-600 font-semibold hover:underline text-xs">Tambahkan Order Baru</button>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-8 text-center text-xs text-slate-400">
+                © 2026 Enterprise Order &amp; Contract Management System - Special Segments: DPS &amp; DSS.
+            </div>
+        </div>
+    </main>
+
+    <!-- Add / Edit Order Modal -->
+    <div id="orderModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center overflow-y-auto p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-8 overflow-hidden flex flex-col max-h-[90vh] modal-exit-active" id="orderModalContent">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-900 text-white shrink-0">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-file-signature text-indigo-400 text-lg"></i>
+                    <h3 class="text-base font-bold" id="modalTitle">Tambah Order Enterprise Baru</h3>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form id="orderForm" class="p-6 overflow-y-auto space-y-6 text-xs flex-1">
+                <input type="hidden" id="orderId" value="ORD-5771">
+                
+                <!-- Section 1: Data Identitas & Pelanggan & Segmen -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                    <h4 class="font-bold text-indigo-700 text-xs uppercase tracking-wider mb-3 flex items-center">
+                        <i class="fas fa-building mr-2"></i> 1. Identitas Pelanggan, LOP &amp; Segmen Service
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">ID LOP <span class="text-red-500">*</span></label>
+                            <input type="text" id="idLop" required="" placeholder="Contoh: LOP-2026-001" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Nama Pelanggan <span class="text-red-500">*</span></label>
+                            <input type="text" id="customer" required="" placeholder="Nama PT / Instansi" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">CC Nipnas <span class="text-red-500">*</span></label>
+                            <input type="text" id="ccNipnas" required="" placeholder="CC / NIPNAS Pelanggan" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Segmen Portfolio <span class="text-red-500">*</span></label>
+                            <select id="segmen" required="" class="w-full px-3 py-2 border border-indigo-300 bg-indigo-50/30 text-indigo-900 font-semibold rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none">
+                                <option value="DPS">DPS</option>
+                                <option value="DSS">DSS</option>
+                                <option value="Connectivity">Connectivity</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Kategori Order <span class="text-red-500">*</span></label>
+                            <select id="kategori" required="" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                                <option value="Renewal">Renewal</option>
+                                <option value="PSB">PSB</option>
+                                <option value="Modify Price">Modify Price</option>
+                                <option value="Modify BW">Modify BW</option>
+                                <option value="Resume Order">Resume Order</option>
+                                <option value="Disconect">Disconect</option>
+                                <option value="Downgread">Downgread</option>
+                                <option value="Input Ulang">Input Ulang</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Spesifikasi Layanan & Teknis -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                    <h4 class="font-bold text-indigo-700 text-xs uppercase tracking-wider mb-3 flex items-center">
+                        <i class="fas fa-server mr-2"></i> 2. Layanan &amp; Spesifikasi Teknis
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Produk <span class="text-red-500">*</span></label>
+                            <input type="text" id="produk" required="" placeholder="Mis: Cloud / IoT Smart City" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">BW (Bandwidth)</label>
+                            <input type="text" id="bw" placeholder="Mis: 100 Mbps / 1 Gbps" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Durasi (Bulan) <span class="text-red-500">*</span></label>
+                            <input type="number" id="durasi" min="1" value="12" required="" oninput="calculateTotalProyek()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">SID (Service ID)</label>
+                            <input type="text" id="sid" placeholder="Mis: SID-882103" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Quote</label>
+                            <input type="text" id="quote" placeholder="No. Quotation" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Order / WO</label>
+                            <input type="text" id="orderNo" placeholder="No. Order / Work Order" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Billing Account</label>
+                            <input type="text" id="ba" placeholder="Nomor Billing Account" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Keuangan & Billing -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                    <h4 class="font-bold text-indigo-700 text-xs uppercase tracking-wider mb-3 flex items-center">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i> 3. Keuangan &amp; Biaya
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Biaya OTC (Rp)</label>
+                            <input type="number" id="otc" min="0" value="0" oninput="calculateTotalProyek()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Biaya Bulanan / MRC (Rp) <span class="text-red-500">*</span></label>
+                            <input type="number" id="bulanan" min="0" value="0" required="" oninput="calculateTotalProyek()" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Total Proyek (Rp)</label>
+                            <input type="number" id="totalProyek" readonly="" class="w-full px-3 py-2 border border-slate-200 bg-slate-100 font-semibold text-indigo-700 rounded-lg outline-none">
+                            <span class="text-[10px] text-slate-400 mt-1 block">Kalkulasi: OTC + (Bulanan × Durasi)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Status Operasional & Kontrak -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                    <h4 class="font-bold text-indigo-700 text-xs uppercase tracking-wider mb-3 flex items-center">
+                        <i class="fas fa-file-contract mr-2"></i> 4. Status Operasional, Billing &amp; Kontrak
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Tanggal Provcom</label>
+                            <input type="date" id="provcom" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Tanggal Billcom</label>
+                            <input type="date" id="billcom" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Status Overall Order</label>
+                            <select id="status" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                                <option value="Inprogress">Inprogress</option>
+                                <option value="Pending Baso">Pending Baso</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-3">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">No. Kontrak</label>
+                            <input type="text" id="noKontrak" placeholder="Nomor Kontrak Legal" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Link Review Kontrak</label>
+                            <input type="url" id="reviewKontrak" placeholder="https://..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">Start Date</label>
+                            <input type="date" id="startDate" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">End Date</label>
+                            <input type="date" id="endDate" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="block font-medium text-slate-700 mb-1">Keterangan / Catatan Tambahan</label>
+                        <textarea id="keterangan" rows="2" placeholder="Catatan khusus mengenai order DPS/DSS, syarat, atau progres..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none bg-white resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 font-medium transition-colors">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors shadow-sm">Simpan Data Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center overflow-y-auto p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-8 overflow-hidden modal-enter flex flex-col" id="detailModalContent">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-900 text-white shrink-0">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-info-circle text-indigo-400 text-lg"></i>
+                    <h3 class="text-base font-bold">Detail Lengkap Order Pelanggan</h3>
+                </div>
+                <span id="detailIdRef" class="text-xs font-mono bg-slate-800 text-indigo-300 px-2.5 py-1 rounded-md"></span>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-xs overflow-y-auto max-h-[80vh]" id="detailModalBody">
+                <!-- Detail Content Injected via JS -->
+            </div>
+            <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end">
+                <button onclick="closeDetailModal()" class="px-4 py-1.5 bg-slate-800 text-white hover:bg-slate-900 rounded-lg font-medium">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden p-6 text-center" id="deleteModalContent">
+            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xl mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-800 mb-2">Hapus Data Order?</h3>
+            <p class="text-slate-500 text-xs mb-6">Tindakan ini tidak dapat dibatalkan. Seluruh data terkait order ini akan dihapus permanen dari sistem.</p>
+            <div class="flex justify-center space-x-3 text-xs">
+                <button onclick="closeDeleteModal()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 font-medium transition-colors">Batal</button>
+                <button id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors shadow-sm">Ya, Hapus Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Insights Modal -->
+    <div id="aiModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center overflow-y-auto p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-8 overflow-hidden flex flex-col max-h-[85vh] modal-exit-active" id="aiModalContent">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-900 text-white shrink-0">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-brain text-indigo-400 text-lg"></i>
+                    <h3 class="text-base font-bold">AI Analytics &amp; Executive Insights (DPS &amp; DSS Breakdown)</h3>
+                </div>
+                <button onclick="closeAIModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 relative" id="aiModalBody">
+                <div id="aiLoading" class="flex flex-col items-center justify-center py-12 hidden">
+                    <i class="fas fa-circle-notch fa-spin text-indigo-600 text-3xl mb-3"></i>
+                    <p class="text-slate-600 text-xs font-medium animate-pulse">Gemini AI sedang menganalisis portofolio DPS &amp; DSS serta performa order...</p>
+                </div>
+                <div id="aiResult" class="text-slate-700 text-xs space-y-3 leading-relaxed"></div>
+                <div id="aiError" class="hidden flex-col items-center justify-center py-8 text-center">
+                    <i class="fas fa-exclamation-circle text-red-500 text-3xl mb-3"></i>
+                    <p class="text-slate-800 font-bold mb-1">Gagal Memproses AI Insights</p>
+                    <p class="text-slate-500 text-xs mb-4" id="aiErrorMessage">Terjadi kesalahan koneksi.</p>
+                    <button onclick="getAIInsights()" class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg font-medium text-xs hover:bg-indigo-100">Coba Ulang</button>
+                </div>
+            </div>
+            
+            <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end">
+                <button onclick="closeAIModal()" class="px-4 py-1.5 text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg text-xs font-medium">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center text-xs transform transition-all duration-300 z-50 translate-y-20 opacity-0">
+        <i id="toastIcon" class="fas fa-check-circle text-emerald-400 mr-2.5 text-base"></i>
+        <span id="toastMessage">Order tersimpan di sesi lokal!</span>
+    </div>
+
+    <!-- Integrasi Firebase Cloud Database & Modul JavaScript -->
+    
+
+    <script type="module" src="js/app.js"></script>
+</body></html>
