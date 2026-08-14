@@ -66,6 +66,7 @@ async function loadOrders() {
 
     orders = data || [];
 
+    populateYearFilter();
 
     const cloudStatusEl =
         document.getElementById(
@@ -549,41 +550,127 @@ function renderTable(
     updateStats();
 }
 
+/* =========================================================
+   YEAR FILTER
+========================================================= */
+
+function populateYearFilter() {
+
+    const yearFilter =
+        document.getElementById("filterTahun");
+
+    if (!yearFilter) {
+        return;
+    }
+
+    // Simpan pilihan tahun yang sedang aktif
+    const currentValue = yearFilter.value;
+
+    // Ambil tahun unik dari start_date
+    const years = [
+        ...new Set(
+            orders
+                .map(order => {
+
+                    if (!order.start_date) {
+                        return null;
+                    }
+
+                    const date =
+                        new Date(order.start_date);
+
+                    if (
+                        isNaN(date.getTime())
+                    ) {
+                        return null;
+                    }
+
+                    return date.getFullYear();
+                })
+                .filter(year => year !== null)
+        )
+    ];
+
+    // Urutkan tahun terbaru -> terlama
+    years.sort(
+        (a, b) => b - a
+    );
+
+    // Reset dropdown
+    yearFilter.innerHTML = `
+        <option value="">Semua Tahun</option>
+    `;
+
+    // Tambahkan tahun dari database
+    years.forEach(year => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = year;
+        option.textContent = year;
+
+        yearFilter.appendChild(
+            option
+        );
+    });
+
+    // Kembalikan pilihan sebelumnya
+    if (
+        currentValue &&
+        years.includes(
+            Number(currentValue)
+        )
+    ) {
+        yearFilter.value =
+            currentValue;
+    }
+}
+
 
 /* =========================================================
    STATISTICS
 ========================================================= */
 
-function updateStats() {
+function updateStats(data = orders) {
 
-    const totalOrders =
-        orders.length;
+    /* =====================================================
+       TOTAL ORDER
+    ===================================================== */
 
+    const totalOrders = orders.length;
+
+
+    /* =====================================================
+       PEMISAHAN SEGMEN
+    ===================================================== */
+
+    const dpsOrders = orders.filter(
+        order =>
+            String(order.segmen || "")
+                .trim()
+                .toUpperCase() === "DPS"
+    );
+
+
+    const dssOrders = orders.filter(
+        order =>
+            String(order.segmen || "")
+                .trim()
+                .toUpperCase() === "DSS"
+    );
+
+
+    /* =====================================================
+       TOTAL PROJECT
+    ===================================================== */
 
     const totalRevenue =
         orders.reduce(
             (acc, order) =>
                 acc +
-                (
-                    Number(
-                        order.total_proyek
-                    ) || 0
-                ),
+                (Number(order.total_proyek) || 0),
             0
-        );
-
-
-    const dpsOrders =
-        orders.filter(
-            order =>
-                order.segmen === "DPS"
-        );
-
-
-    const dssOrders =
-        orders.filter(
-            order =>
-                order.segmen === "DSS"
         );
 
 
@@ -591,11 +678,7 @@ function updateStats() {
         dpsOrders.reduce(
             (acc, order) =>
                 acc +
-                (
-                    Number(
-                        order.total_proyek
-                    ) || 0
-                ),
+                (Number(order.total_proyek) || 0),
             0
         );
 
@@ -604,27 +687,42 @@ function updateStats() {
         dssOrders.reduce(
             (acc, order) =>
                 acc +
-                (
-                    Number(
-                        order.total_proyek
-                    ) || 0
-                ),
+                (Number(order.total_proyek) || 0),
             0
         );
 
 
-    const totalBulanan =
-        orders.reduce(
+    /* =====================================================
+       MRC / BULANAN
+       DIPISAHKAN BERDASARKAN SEGMEN
+    ===================================================== */
+
+    const mrcDPS =
+        dpsOrders.reduce(
             (acc, order) =>
                 acc +
-                (
-                    Number(
-                        order.bulanan
-                    ) || 0
-                ),
+                (Number(order.bulanan) || 0),
             0
         );
 
+
+    const mrcDSS =
+        dssOrders.reduce(
+            (acc, order) =>
+                acc +
+                (Number(order.bulanan) || 0),
+            0
+        );
+
+
+    const totalMRC =
+        mrcDPS +
+        mrcDSS;
+
+
+    /* =====================================================
+       BILLCOM
+    ===================================================== */
 
     const billcomSelesai =
         orders.filter(
@@ -634,6 +732,10 @@ function updateStats() {
         ).length;
 
 
+    /* =====================================================
+       PROVCOM
+    ===================================================== */
+
     const provcomPending =
         orders.filter(
             order =>
@@ -641,6 +743,10 @@ function updateStats() {
                 order.provcom === ""
         ).length;
 
+
+    /* =====================================================
+       TOTAL ORDERS
+    ===================================================== */
 
     document.getElementById(
         "statTotalOrders"
@@ -651,24 +757,28 @@ function updateStats() {
     );
 
 
+    /* =====================================================
+       TOTAL PROJECT
+    ===================================================== */
+
     document.getElementById(
         "statTotalRevenue"
     )?.replaceChildren(
         document.createTextNode(
-            formatRupiah(
-                totalRevenue
-            )
+            formatRupiah(totalRevenue)
         )
     );
 
+
+    /* =====================================================
+       PROJECT DPS
+    ===================================================== */
 
     document.getElementById(
         "statTotalDPS"
     )?.replaceChildren(
         document.createTextNode(
-            formatRupiah(
-                totalDPS
-            )
+            formatRupiah(totalDPS)
         )
     );
 
@@ -682,13 +792,15 @@ function updateStats() {
     );
 
 
+    /* =====================================================
+       PROJECT DSS
+    ===================================================== */
+
     document.getElementById(
         "statTotalDSS"
     )?.replaceChildren(
         document.createTextNode(
-            formatRupiah(
-                totalDSS
-            )
+            formatRupiah(totalDSS)
         )
     );
 
@@ -702,16 +814,48 @@ function updateStats() {
     );
 
 
+    /* =====================================================
+       TOTAL MRC
+    ===================================================== */
+
     document.getElementById(
         "statTotalBulanan"
     )?.replaceChildren(
         document.createTextNode(
-            formatRupiah(
-                totalBulanan
-            )
+            formatRupiah(totalMRC)
         )
     );
 
+
+    /* =====================================================
+       MRC DPS
+    ===================================================== */
+
+    document.getElementById(
+        "statMrcDPS"
+    )?.replaceChildren(
+        document.createTextNode(
+            formatRupiah(mrcDPS)
+        )
+    );
+
+
+    /* =====================================================
+       MRC DSS
+    ===================================================== */
+
+    document.getElementById(
+        "statMrcDSS"
+    )?.replaceChildren(
+        document.createTextNode(
+            formatRupiah(mrcDSS)
+        )
+    );
+
+
+    /* =====================================================
+       BILLCOM
+    ===================================================== */
 
     document.getElementById(
         "statBillcomSelesai"
@@ -722,6 +866,10 @@ function updateStats() {
     );
 
 
+    /* =====================================================
+       PROVCOM
+    ===================================================== */
+
     document.getElementById(
         "statProvcomPendingInfo"
     )?.replaceChildren(
@@ -729,8 +877,30 @@ function updateStats() {
             `${provcomPending} Belum Provcom`
         )
     );
-}
 
+
+    /* =====================================================
+       DEBUG
+    ===================================================== */
+
+    console.log("========== STATISTICS ==========");
+
+    console.log("Total Order :", totalOrders);
+
+    console.log("DPS Orders  :", dpsOrders.length);
+    console.log("DSS Orders  :", dssOrders.length);
+
+    console.log("Total Project :", totalRevenue);
+
+    console.log("Project DPS :", totalDPS);
+    console.log("Project DSS :", totalDSS);
+
+    console.log("MRC DPS :", mrcDPS);
+    console.log("MRC DSS :", mrcDSS);
+    console.log("Total MRC :", totalMRC);
+
+    console.log("===============================");
+}
 
 /* =========================================================
    SEARCH & FILTER
@@ -764,9 +934,19 @@ function applyFilters() {
         )?.value || "";
 
 
+    const yearFilter =
+        document.getElementById(
+            "filterTahun"
+        )?.value || "";
+
+
     const filtered =
         orders.filter(
             order => {
+
+                /* =========================
+                   SEARCH
+                ========================= */
 
                 const matchSearch = [
 
@@ -790,11 +970,19 @@ function applyFilters() {
                 );
 
 
+                /* =========================
+                   FILTER SEGMEN
+                ========================= */
+
                 const matchSegmen =
                     segFilter === "" ||
                     order.segmen ===
                     segFilter;
 
+
+                /* =========================
+                   FILTER KATEGORI
+                ========================= */
 
                 const matchKategori =
                     katFilter === "" ||
@@ -802,17 +990,69 @@ function applyFilters() {
                     katFilter;
 
 
+                /* =========================
+                   FILTER STATUS
+                ========================= */
+
                 const matchStatus =
                     statusFilter === "" ||
                     order.status ===
                     statusFilter;
 
 
+                /* =========================
+                   FILTER TAHUN
+                   Berdasarkan start_date
+                ========================= */
+
+                let matchYear = true;
+
+
+                if (yearFilter !== "") {
+
+                    if (
+                        !order.start_date
+                    ) {
+
+                        matchYear = false;
+
+                    } else {
+
+                        const date =
+                            new Date(
+                                order.start_date
+                            );
+
+                        if (
+                            isNaN(
+                                date.getTime()
+                            )
+                        ) {
+
+                            matchYear = false;
+
+                        } else {
+
+                            matchYear =
+                                date
+                                    .getFullYear()
+                                    .toString() ===
+                                yearFilter;
+                        }
+                    }
+                }
+
+
+                /* =========================
+                   HASIL FILTER
+                ========================= */
+
                 return (
                     matchSearch &&
                     matchSegmen &&
                     matchKategori &&
-                    matchStatus
+                    matchStatus &&
+                    matchYear
                 );
             }
         );
@@ -2031,7 +2271,7 @@ async function deleteOrder(
        Update statistik
     */
 
-    updateStats();
+    updateStats(data);
 
 
     /*
